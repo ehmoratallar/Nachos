@@ -27,6 +27,30 @@ public class Communicator {
      * @param	word	the integer to transfer.
      */
     public void speak(int word) {
+	
+	conditionLock.acquire();
+	    
+		if(speakerReady == true){
+			condLock.sleep();
+		}
+		else{
+			speakerReady = true;
+			
+			if(listenerReady){
+			
+				data = word;
+				condLock.wake();
+			}
+			else{
+				condLock.sleep();
+				data = word;
+			}
+		}
+		
+	    
+	conditionLock.release();
+	    
+	
     }
 
     /**
@@ -39,6 +63,10 @@ public class Communicator {
 	return 0;
     }
     
-    private Lock conditionLock;
+    private Lock conditionLock = new Lock();
+    private Condition2 condLock = new Condition2(conditionLock);
+    private boolean listenerReady = false;
+    private boolean speakerReady = false;
+    private int data;
     
 }
