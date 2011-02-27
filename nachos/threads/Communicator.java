@@ -39,11 +39,16 @@ public class Communicator {
 			if(listenerReady){
 			
 				data = word;
-				condLock.wake();
+				
+				//~ speakerReady = false;
+				
+				condLock.wakeAll();
 			}
 			else{
 				condLock.sleep();
+				
 				data = word;
+				//~ speakerReady = false;
 			}
 		}
 		
@@ -60,7 +65,41 @@ public class Communicator {
      * @return	the integer transferred.
      */    
     public int listen() {
-	return 0;
+	    
+	    
+	conditionLock.acquire();
+		
+		int aux=0;
+	    
+		if(listenerReady == true){
+			condLock.sleep();
+		}
+		else{
+			listenerReady = true;
+			condLock.wakeAll();
+			
+			if(speakerReady){
+				
+				aux = data;
+				speakerReady = false;
+				
+				condLock.wakeAll();
+			}
+			else{
+				condLock.sleep();
+				
+				aux = data;
+				speakerReady = false;
+				condLock.wakeAll();
+				
+			}
+		}
+	
+	
+	listenerReady = false;   
+	conditionLock.release();
+	    
+	return aux;
     }
     
     private Lock conditionLock = new Lock();
