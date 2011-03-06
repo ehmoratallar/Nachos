@@ -168,6 +168,7 @@ protected class PriorityQueue extends ThreadQueue {
 			waitLine.get(i).useDefaultPriority = true;
 		}
 		//~ System.out.println("***Debug-->"+waitLine.toString()+" Size: "+waitLine.size());
+		//~ System.out.println(" Size: "+waitLine.size());
 		ThreadState temp =(this.pickNextThread());
 		//~ System.out.println(temp.toString());
 		
@@ -192,6 +193,7 @@ protected class PriorityQueue extends ThreadQueue {
 		
 		float timerCompare = Machine.timer().getTime();
 		ThreadState aux = null;
+		int index = 0;
 		
 		//~ System.out.println("Debug-->"+waitLine.toString());
 		
@@ -208,20 +210,24 @@ protected class PriorityQueue extends ThreadQueue {
 			if(aux.useDefaultPriority){
 				if( waitLine.get(i).useDefaultPriority && waitLine.get(i).getPriority() > aux.getPriority()){
 					aux = waitLine.get(i);
+					index = i;
 				}
 				else if( waitLine.get(i).useDefaultPriority == false && waitLine.get(i).getEffectivePriority() > aux.getPriority()){
 					aux = waitLine.get(i);
+					index = i;
 				}
 				else if( waitLine.get(i).useDefaultPriority && waitLine.get(i).getEffectivePriority() == aux.getPriority()){
 					
 					if( (timerCompare - aux.timeQueued) > (timerCompare - waitLine.get(i).timeQueued)){
 						aux = waitLine.get(i);
+						index = i;
 					}
 				}
 				else if( waitLine.get(i).useDefaultPriority == false && waitLine.get(i).getEffectivePriority() == aux.getPriority()){
 					
 					if( (timerCompare - aux.timeQueued) > (timerCompare - waitLine.get(i).timeQueued)){
 						aux = waitLine.get(i);
+						index = i;
 					}
 				}
 			}
@@ -229,15 +235,18 @@ protected class PriorityQueue extends ThreadQueue {
 				
 				if( waitLine.get(i).useDefaultPriority && waitLine.get(i).getPriority() > aux.getEffectivePriority()){
 					aux = waitLine.get(i);
+					index = i;
 				}
 				else if( waitLine.get(i).useDefaultPriority == false && waitLine.get(i).getEffectivePriority() > aux.getEffectivePriority()){
 					aux = waitLine.get(i);
+					index = i;
 				}
 				
 				else if( waitLine.get(i).useDefaultPriority && waitLine.get(i).getEffectivePriority() == aux.getEffectivePriority()){
 					
 					if( (timerCompare - aux.timeQueued) > (timerCompare - waitLine.get(i).timeQueued)){
 						aux = waitLine.get(i);
+						index = i;
 					}
 				}
 				
@@ -245,6 +254,7 @@ protected class PriorityQueue extends ThreadQueue {
 					
 					if( (timerCompare - aux.timeQueued) > (timerCompare - waitLine.get(i).timeQueued)){
 						aux = waitLine.get(i);
+						index = i;
 					}
 				}
 				
@@ -252,8 +262,8 @@ protected class PriorityQueue extends ThreadQueue {
 			
 		}
 		
-		
-	    return aux;
+		waitLine.remove(index);
+		return aux;
 	}
 	
 	public void print() {
@@ -432,7 +442,7 @@ protected class ThreadState {
 		
 		Lib.assertTrue(Machine.interrupt().disabled());
 		       
-	    Lib.assertTrue(waitQueue.waitLine.isEmpty());
+		Lib.assertTrue(waitQueue.waitLine.isEmpty());
 		
 		
 	}	
