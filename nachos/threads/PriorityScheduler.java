@@ -167,8 +167,17 @@ protected class PriorityQueue extends ThreadQueue {
 		for(int i = 0; i < waitLine.size(); i++){
 			waitLine.get(i).useDefaultPriority = true;
 		}
-		System.out.println("***Debug-->"+waitLine.toString()+" Size: "+waitLine.size());
-		return (this.pickNextThread()).thread;
+		//~ System.out.println("***Debug-->"+waitLine.toString()+" Size: "+waitLine.size());
+		ThreadState temp =(this.pickNextThread());
+		//~ System.out.println(temp.toString());
+		
+		if(temp == null){
+			return null;
+		}
+		else{
+		
+			return temp.thread;
+		}
 	}
 
 	/**
@@ -182,9 +191,9 @@ protected class PriorityQueue extends ThreadQueue {
 	    // implement me
 		
 		float timerCompare = Machine.timer().getTime();
-		ThreadState aux = new ThreadState(new KThread());
+		ThreadState aux = null;
 		
-		System.out.println("Debug-->"+waitLine.toString());
+		//~ System.out.println("Debug-->"+waitLine.toString());
 		
 		if(waitLine.size() > 0){
 			aux = (ThreadState)waitLine.getFirst();
@@ -420,6 +429,9 @@ protected class ThreadState {
 	public void acquire(PriorityQueue waitQueue) {
 	    // implement me
 		
+		Lib.assertTrue(Machine.interrupt().disabled());
+		       
+	    Lib.assertTrue(waitQueue.waitLine.isEmpty());
 		
 		
 	}	
