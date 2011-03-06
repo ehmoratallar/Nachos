@@ -395,7 +395,8 @@ protected class ThreadState {
 		if(waitQueue.waitLine.isEmpty()){
 			
 			waitQueue.lockHolder = this;
-			
+			timeQueued = Machine.timer().getTime();
+			waitQueue.waitLine.add(this);
 			
 		}else{
 			
