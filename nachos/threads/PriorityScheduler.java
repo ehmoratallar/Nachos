@@ -6,6 +6,8 @@ import java.util.TreeSet;
 import java.util.HashSet;
 import java.util.Iterator;
 
+import java.util.*;
+
 /**
  * A scheduler that chooses threads based on their priorities.
  *
@@ -125,7 +127,24 @@ public class PriorityScheduler extends Scheduler {
     /**
      * A <tt>ThreadQueue</tt> that sorts threads by priority.
      */
-    protected class PriorityQueue extends ThreadQueue {
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+protected class PriorityQueue extends ThreadQueue {
 	PriorityQueue(boolean transferPriority) {
 	    this.transferPriority = transferPriority;
 	}
@@ -143,7 +162,13 @@ public class PriorityScheduler extends Scheduler {
 	public KThread nextThread() {
 	    Lib.assertTrue(Machine.interrupt().disabled());
 	    // implement me
-	    return null;
+		
+		lockHolder = null;
+		for(int i = 0; i < waitLine.size(); i++){
+			waitLine.get(i).useDefaultPriority = true;
+		}
+		System.out.println("***Debug-->"+waitLine.toString()+" Size: "+waitLine.size());
+		return (this.pickNextThread()).thread;
 	}
 
 	/**
@@ -155,7 +180,71 @@ public class PriorityScheduler extends Scheduler {
 	 */
 	protected ThreadState pickNextThread() {
 	    // implement me
-	    return null;
+		
+		float timerCompare = Machine.timer().getTime();
+		ThreadState aux = new ThreadState(new KThread());
+		
+		System.out.println("Debug-->"+waitLine.toString());
+		
+		if(waitLine.size() > 0){
+			aux = (ThreadState)waitLine.getFirst();
+		}
+		else{
+			return null;
+			
+		}
+		
+		for(int i = 0; i < waitLine.size(); i++){
+			
+			if(aux.useDefaultPriority){
+				if( waitLine.get(i).useDefaultPriority && waitLine.get(i).getPriority() > aux.getPriority()){
+					aux = waitLine.get(i);
+				}
+				else if( waitLine.get(i).useDefaultPriority == false && waitLine.get(i).getEffectivePriority() > aux.getPriority()){
+					aux = waitLine.get(i);
+				}
+				else if( waitLine.get(i).useDefaultPriority && waitLine.get(i).getEffectivePriority() == aux.getPriority()){
+					
+					if( (timerCompare - aux.timeQueued) > (timerCompare - waitLine.get(i).timeQueued)){
+						aux = waitLine.get(i);
+					}
+				}
+				else if( waitLine.get(i).useDefaultPriority == false && waitLine.get(i).getEffectivePriority() == aux.getPriority()){
+					
+					if( (timerCompare - aux.timeQueued) > (timerCompare - waitLine.get(i).timeQueued)){
+						aux = waitLine.get(i);
+					}
+				}
+			}
+			else{
+				
+				if( waitLine.get(i).useDefaultPriority && waitLine.get(i).getPriority() > aux.getEffectivePriority()){
+					aux = waitLine.get(i);
+				}
+				else if( waitLine.get(i).useDefaultPriority == false && waitLine.get(i).getEffectivePriority() > aux.getEffectivePriority()){
+					aux = waitLine.get(i);
+				}
+				
+				else if( waitLine.get(i).useDefaultPriority && waitLine.get(i).getEffectivePriority() == aux.getEffectivePriority()){
+					
+					if( (timerCompare - aux.timeQueued) > (timerCompare - waitLine.get(i).timeQueued)){
+						aux = waitLine.get(i);
+					}
+				}
+				
+				else if( waitLine.get(i).useDefaultPriority == false && waitLine.get(i).getEffectivePriority() == aux.getEffectivePriority()){
+					
+					if( (timerCompare - aux.timeQueued) > (timerCompare - waitLine.get(i).timeQueued)){
+						aux = waitLine.get(i);
+					}
+				}
+				
+			}
+			
+		}
+		
+		
+	    return aux;
 	}
 	
 	public void print() {
@@ -168,8 +257,26 @@ public class PriorityScheduler extends Scheduler {
 	 * threads to the owning thread.
 	 */
 	public boolean transferPriority;
+	
+	public ThreadState lockHolder;
+	public LinkedList<ThreadState> waitLine = new LinkedList<ThreadState>();
     }
 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     /**
      * The scheduling state of a thread. This should include the thread's
      * priority, its effective priority, any objects it owns, and the queue
@@ -177,7 +284,9 @@ public class PriorityScheduler extends Scheduler {
      *
      * @see	nachos.threads.KThread#schedulingState
      */
-    protected class ThreadState {
+   
+
+protected class ThreadState {
 	/**
 	 * Allocate a new <tt>ThreadState</tt> object and associate it with the
 	 * specified thread.
@@ -206,7 +315,7 @@ public class PriorityScheduler extends Scheduler {
 	 */
 	public int getEffectivePriority() {
 	    // implement me
-	    return priority;
+	    return effectivePriority;
 	}
 
 	/**
@@ -221,7 +330,43 @@ public class PriorityScheduler extends Scheduler {
 	    this.priority = priority;
 	    
 	    // implement me
+	    
+	    if(this.priority < priorityMinimum){
+			
+			this.priority = priorityMinimum;
+			
+		    }
+		else if(this.priority > priorityMaximum){
+			
+			this.priority = priorityMaximum;
+			
+		}
+	    
 	}
+	
+	
+	
+	
+	public void setEffectivePriority(int priority) {
+		if (this.effectivePriority == effectivePriority)
+			return;
+		    
+		this.effectivePriority = effectivePriority;
+		    
+		if(this.effectivePriority < priorityMinimum){
+			
+			this.effectivePriority = priorityMinimum;
+			
+		    }
+		else if(this.effectivePriority > priorityMaximum){
+			
+			this.effectivePriority = priorityMaximum;
+			
+		}
+	   
+	}
+	
+	
 
 	/**
 	 * Called when <tt>waitForAccess(thread)</tt> (where <tt>thread</tt> is
@@ -237,7 +382,30 @@ public class PriorityScheduler extends Scheduler {
 	 */
 	public void waitForAccess(PriorityQueue waitQueue) {
 	    // implement me
+		
+		if(waitQueue.waitLine.isEmpty()){
+			
+			waitQueue.lockHolder = this;
+			
+			
+		}else{
+			
+			if(waitQueue.transferPriority){
+				this.useDefaultPriority = false;
+				this.setEffectivePriority(priorityMinimum);
+				waitQueue.lockHolder.setPriority(this.getPriority());
+			}
+			timeQueued = Machine.timer().getTime();
+			waitQueue.waitLine.add(this);
+			
+			
+		}
+		
+		
+		
 	}
+	
+	
 
 	/**
 	 * Called when the associated thread has acquired access to whatever is
@@ -251,11 +419,21 @@ public class PriorityScheduler extends Scheduler {
 	 */
 	public void acquire(PriorityQueue waitQueue) {
 	    // implement me
+		
+		
+		
 	}	
 
 	/** The thread with which this object is associated. */	   
 	protected KThread thread;
 	/** The priority of the associated thread. */
 	protected int priority;
+	
+	protected int effectivePriority;
+	
+	protected float timeQueued;
+	
+	private boolean useDefaultPriority = true;
+	
     }
 }
