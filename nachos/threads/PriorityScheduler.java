@@ -162,16 +162,19 @@ protected class PriorityQueue extends ThreadQueue {
 	public KThread nextThread() {
 	    Lib.assertTrue(Machine.interrupt().disabled());
 	    // implement me
+
 		
-		lockHolder = null;
-		for(int i = 0; i < waitLine.size(); i++){
-			waitLine.get(i).useDefaultPriority = true;
-		}
-		//~ System.out.println("***Debug-->"+waitLine.toString()+" Size: "+waitLine.size());
-		//~ System.out.println(" Size: "+waitLine.size());
 		ThreadState temp =(this.pickNextThread());
-		//~ System.out.println(temp.toString());
 		
+		
+		if(temp == lockHolder){
+			lockHolder = null;
+			for(int i = 0; i < waitLine.size(); i++){
+				waitLine.get(i).useDefaultPriority = true;
+			}
+		}
+		
+		waitLine.remove(temp);
 		if(temp == null){
 			return null;
 		}
@@ -262,7 +265,11 @@ protected class PriorityQueue extends ThreadQueue {
 			
 		}
 		
-		waitLine.remove(index);
+		
+		
+		
+		
+		
 		return aux;
 	}
 	
@@ -443,6 +450,8 @@ protected class ThreadState {
 		Lib.assertTrue(Machine.interrupt().disabled());
 		       
 		Lib.assertTrue(waitQueue.waitLine.isEmpty());
+		
+		waitQueue.lockHolder = this;
 		
 		
 	}	
