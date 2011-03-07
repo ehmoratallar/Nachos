@@ -208,6 +208,8 @@ protected class PriorityQueue extends ThreadQueue {
 			
 		}
 		
+		
+		
 		for(int i = 0; i < waitLine.size(); i++){
 			
 			if(aux.useDefaultPriority){
@@ -269,7 +271,7 @@ protected class PriorityQueue extends ThreadQueue {
 		
 		
 		
-		
+		lockHolder = aux;
 		return aux;
 	}
 	
