@@ -422,7 +422,7 @@ protected class ThreadState {
 			if(waitQueue.transferPriority){
 				this.useDefaultPriority = false;
 				this.setEffectivePriority(priorityMinimum);
-				waitQueue.lockHolder.setPriority(this.getPriority());
+				waitQueue.lockHolder.setPriority(waitQueue.lockHolder.effectivePriority+this.getPriority());
 			}
 			timeQueued = Machine.timer().getTime();
 			waitQueue.waitLine.add(this);
@@ -453,6 +453,7 @@ protected class ThreadState {
 		       
 		Lib.assertTrue(waitQueue.waitLine.isEmpty());
 		
+		this.useDefaultPriority = false;
 		waitQueue.lockHolder = this;
 		
 		
