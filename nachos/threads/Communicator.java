@@ -30,10 +30,10 @@ public class Communicator {
 	
 	conditionLock.acquire();
 	    
-		if(speakerReady == true){
+		while(speakerReady == true){
 			condLock.sleep();
 		}
-		else{
+		//~ else{
 			speakerReady = true;
 			
 			if(listenerReady){
@@ -50,7 +50,7 @@ public class Communicator {
 				data = word;
 				//~ speakerReady = false;
 			}
-		}
+		//~ }
 		
 	    
 	conditionLock.release();
@@ -71,10 +71,10 @@ public class Communicator {
 		
 		int aux=0;
 	    
-		if(listenerReady == true){
+		while(listenerReady == true){
 			condLock.sleep();
 		}
-		else{
+		//~ else{
 			listenerReady = true;
 			condLock.wakeAll();
 			
@@ -93,7 +93,7 @@ public class Communicator {
 				condLock.wakeAll();
 				
 			}
-		}
+		//~ }
 	
 	
 	listenerReady = false;   
@@ -101,6 +101,15 @@ public class Communicator {
 	    
 	return aux;
     }
+    
+    
+	public static void selfTest(){
+	    
+	System.out.println("Self Test Communicator");
+	
+	CommunicatorTest.runTest();
+		
+	}
     
     private Lock conditionLock = new Lock();
     private Condition2 condLock = new Condition2(conditionLock);

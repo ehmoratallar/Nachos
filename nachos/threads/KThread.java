@@ -298,7 +298,7 @@ public class KThread {
 		//~ System.out.println("Entro 2");
 		this.joinList.add(currentThread);
 		
-		System.out.println("Lista"+this.joinList.toString());
+		//~ System.out.println("Lista"+this.joinList.toString());
 		//~ System.out.println("Lista"+currentThread.joinList.toString());
 	
 		//~ this.ready();
@@ -493,9 +493,26 @@ public class KThread {
 
 
 		public void run() { 
+			
+			boolean AlarmTest = true;
+			
 			for (int i=0; i<5; i++) { 
 			System.out.println("*** thread " + which + " looped " + i + " times, Tick:" + Machine.timer().getTime()); 
-			System.out.println("NumFor" + i);
+			//~ System.out.println("NumFor" + i);
+			
+			if (AlarmTest) { 
+			if ((which==2) && (i==0)) { 
+			long time=1080; 
+			System.out.println("** "+dos.getName()+" esperara al menos "+time+" ticks, despertara aprox. en "+(Machine.timer().getTime()+time)); 
+			ThreadedKernel.alarm.waitUntil(time); 
+			} 
+			if ((which==3) && (i==1)) { 
+			long time=540; 
+			System.out.println("** "+tres.getName()+" esperara al menos "+time+" ticks, despertara aprox. en "+(Machine.timer().getTime()+time)); 
+			ThreadedKernel.alarm.waitUntil(time); 
+			} 
+			}	
+				
 			if ((which == 1) && (i==0)) 
 			ThreadedKernel.alarm.waitUntil(1000); 
 			if ((which == 1) && (i==1)) 
