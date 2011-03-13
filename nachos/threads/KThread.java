@@ -78,7 +78,7 @@ public class KThread {
      */
     public KThread setTarget(Runnable target) {
 	Lib.assertTrue(status == statusNew);
-	
+
 	this.target = target;
 	return this;
     }
@@ -139,7 +139,7 @@ public class KThread {
     public void fork() {
 	Lib.assertTrue(status == statusNew);
 	Lib.assertTrue(target != null);
-	
+
 	Lib.debug(dbgThread,
 		  "Forking thread: " + toString() + " Runnable: " + target);
 
@@ -152,7 +152,7 @@ public class KThread {
 	    });
 
 	ready();
-	
+
 	Machine.interrupt().restore(intStatus);
     }
 
@@ -164,7 +164,7 @@ public class KThread {
 
     private void begin() {
 	Lib.debug(dbgThread, "Beginning thread: " + toString());
-	
+
 	Lib.assertTrue(this == currentThread);
 
 	restoreState();
@@ -184,7 +184,7 @@ public class KThread {
      */
     public static void finish() {
 	Lib.debug(dbgThread, "Finishing thread: " + currentThread.toString());
-	
+
 	Machine.interrupt().disable();
 
 	Machine.autoGrader().finishingCurrentThread();
@@ -194,18 +194,18 @@ public class KThread {
 
 
 	currentThread.status = statusFinished;
-	    
-	    
+
+
 	    KThread awake = new KThread();
 	    while(currentThread.joinList.size() > 0){
-		
+
 		awake = currentThread.joinList.pop();
 		awake.ready();
-		
+
 		}
-	    
-	    
-	
+
+
+
 	sleep();
     }
 
@@ -227,15 +227,15 @@ public class KThread {
      */
     public static void yield() {
 	Lib.debug(dbgThread, "Yielding thread: " + currentThread.toString());
-	
+
 	Lib.assertTrue(currentThread.status == statusRunning);
-	
+
 	boolean intStatus = Machine.interrupt().disable();
 
 	currentThread.ready();
 
 	runNextThread();
-	
+
 	Machine.interrupt().restore(intStatus);
     }
 
@@ -252,7 +252,7 @@ public class KThread {
      */
     public static void sleep() {
 	Lib.debug(dbgThread, "Sleeping thread: " + currentThread.toString());
-	
+
 	Lib.assertTrue(Machine.interrupt().disabled());
 
 	if (currentThread.status != statusFinished)
@@ -267,14 +267,14 @@ public class KThread {
      */
     public void ready() {
 	Lib.debug(dbgThread, "Ready thread: " + toString());
-	
+
 	Lib.assertTrue(Machine.interrupt().disabled());
 	Lib.assertTrue(status != statusReady);
-	
+
 	status = statusReady;
 	if (this != idleThread)
 	    readyQueue.waitForAccess(this);
-	
+
 	Machine.autoGrader().readyThread(this);
     }
     
@@ -289,15 +289,25 @@ public class KThread {
 	Lib.debug(dbgThread, "Joining to thread: " + toString());
 
 	Lib.assertTrue(this != currentThread);
-	    
 	
+	Machine.interrupt().disable();
+	    
+	//~ System.out.println("Entro 1");
 	if (this != currentThread && this.status != statusFinished){
+		
+		//~ System.out.println("Entro 2");
 		this.joinList.add(currentThread);
-		this.ready();
+		
+		System.out.println("Lista"+this.joinList.toString());
+		//~ System.out.println("Lista"+currentThread.joinList.toString());
+	
+		//~ this.ready();
+		
+		
 		currentThread.sleep();
 	}
-	
-	
+
+	Machine.interrupt().enable();
 
     }
 
@@ -312,14 +322,14 @@ public class KThread {
      */
     private static void createIdleThread() {
 	Lib.assertTrue(idleThread == null);
-	
+
 	idleThread = new KThread(new Runnable() {
 	    public void run() { while (true) yield(); }
 	});
 	idleThread.setName("idle");
 
 	Machine.autoGrader().setIdleThread(idleThread);
-	
+
 	idleThread.fork();
     }
     
@@ -378,13 +388,13 @@ public class KThread {
      */
     protected void restoreState() {
 	Lib.debug(dbgThread, "Running thread: " + currentThread.toString());
-	
+
 	Lib.assertTrue(Machine.interrupt().disabled());
 	Lib.assertTrue(this == currentThread);
 	Lib.assertTrue(tcb == TCB.currentTCB());
 
 	Machine.autoGrader().runningThread(this);
-	
+
 	status = statusRunning;
 
 	if (toBeDestroyed != null) {
@@ -403,31 +413,31 @@ public class KThread {
 	Lib.assertTrue(this == currentThread);
     }
 
-    private static class PingTest implements Runnable {
-	PingTest(int which) {
-	    this.which = which;
-	}
-	
-	public void run() {
-	    for (int i=0; i<5; i++) {
-		System.out.println("*** thread " + which + " looped "
-				   + i + " times");
-		currentThread.yield();
-	    }
-	}
+    //~ private static class PingTest implements Runnable {
+	//~ PingTest(int which) {
+	    //~ this.which = which;
+	//~ }
 
-	private int which;
-    }
+	//~ public void run() {
+	    //~ for (int i=0; i<5; i++) {
+		//~ System.out.println("*** thread " + which + " looped "
+				   //~ + i + " times");
+		//~ currentThread.yield();
+	    //~ }
+	//~ }
+
+	//~ private int which;
+    //~ }
 
     /**
      * Tests whether this module is working.
      */
-    public static void selfTest() {
-	Lib.debug(dbgThread, "Enter KThread.selfTest");
-	
-	new KThread(new PingTest(1)).setName("forked thread").fork();
-	new PingTest(0).run();
-    }
+    //~ public static void selfTest() {
+	//~ Lib.debug(dbgThread, "Enter KThread.selfTest");
+
+	//~ new KThread(new PingTest(1)).setName("forked thread").fork();
+	//~ new PingTest(0).run();
+    //~ }
     
     
 
@@ -472,5 +482,57 @@ public class KThread {
     
     public LinkedList<KThread> joinList = new LinkedList<KThread>();
     public long wakeUpTime;
+    
+    /*Pruebas*/
+    
+    private static class PingTest implements Runnable { 
+		
+		PingTest(int which) { 
+		this.which = which; 
+		}
+
+
+		public void run() { 
+			for (int i=0; i<5; i++) { 
+			System.out.println("*** thread " + which + " looped " + i + " times, Tick:" + Machine.timer().getTime()); 
+			System.out.println("NumFor" + i);
+			if ((which == 1) && (i==0)) 
+			ThreadedKernel.alarm.waitUntil(1000); 
+			if ((which == 1) && (i==1)) 
+			dos.join(); 
+			if ((which == 0) && (i==2)) 
+			dos.join(); 
+			if ((which == 2) && (i==3)) 
+			tres.join(); 
+			if ((which == 1) && (i==3)) 
+			dos.join(); 
+			currentThread.yield(); 
+			} 
+		}
+
+		private int which; 
+	}
+
+	/** 
+	* Tests whether this module is working. 
+	*/ 
+	public static void selfTest() { 
+		Lib.debug(dbgThread, "Enter KThread.selfTest");
+
+		cero = new KThread(new PingTest(0)).setName("forked thread0"); 
+		cero.fork(); 
+		uno = new KThread(new PingTest(1)).setName("forked thread1"); 
+		uno.fork(); 
+		dos = new KThread(new PingTest(2)).setName("forked thread2"); 
+		dos.fork(); 
+		tres = new KThread(new PingTest(3)).setName("forked thread3"); 
+		tres.fork();
+
+	}
+
+	public static KThread tres = null; 
+	public static KThread uno = null; 
+	public static KThread dos = null; 
+	public static KThread cero = null;
     
 }

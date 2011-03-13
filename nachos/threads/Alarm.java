@@ -65,13 +65,16 @@ public class Alarm {
     public void waitUntil(long x) {
 	// for now, cheat just to get something working (busy waiting is bad)
 	
-	/*long wakeTime = Machine.timer().getTime() + x;
-	while (wakeTime > Machine.timer().getTime())
-	    KThread.yield(); */
+	//~ long wakeTime = Machine.timer().getTime() + x;
+	//~ while (wakeTime > Machine.timer().getTime())
+	    //~ KThread.yield(); 
+	 Machine.interrupt().disable();  
 	    
 	(KThread.currentThread()).wakeUpTime = Machine.timer().getTime() + x;
 	waitList.addLast(KThread.currentThread());
 	(KThread.currentThread()).sleep();
+	    
+	Machine.interrupt().enable();
     }
     
     public static LinkedList<KThread> waitList= new LinkedList<KThread>();
