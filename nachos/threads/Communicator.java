@@ -35,7 +35,8 @@ public class Communicator {
 		}
 		//~ else{
 			speakerReady = true;
-			
+			data = word;
+		
 			if(listenerReady){
 			
 				data = word;
@@ -78,21 +79,32 @@ public class Communicator {
 			listenerReady = true;
 			condLock.wakeAll();
 			
-			if(speakerReady){
+			aux = data;
+		
+		while(speakerReady == false){
+			
+			condLock.sleep();
+		}	
+		
+		aux = data;
+		speakerReady = false;
+		condLock.wakeAll();
+		
+		//~ if(speakerReady){
 				
-				aux = data;
-				speakerReady = false;
+				//~ aux = data;
+				//~ speakerReady = false;
 				
-				condLock.wakeAll();
-			}
-			else{
-				condLock.sleep();
+				//~ condLock.wakeAll();
+			//~ }
+			//~ else{
+				//~ condLock.sleep();
 				
-				aux = data;
-				speakerReady = false;
-				condLock.wakeAll();
+				//~ aux = data;
+				//~ speakerReady = false;
+				//~ condLock.wakeAll();
 				
-			}
+			//~ }
 		//~ }
 	
 	

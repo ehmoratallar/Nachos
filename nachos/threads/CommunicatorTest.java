@@ -149,7 +149,7 @@ public class CommunicatorTest {
   }
 
   /* Number of Threads. Must be EVEN!! */
-  private static final int numRVThreads = 2;
+  private static final int numRVThreads = 6;
 
   /* Number of RV actions per thread */
   private static final int howMany = 2;
