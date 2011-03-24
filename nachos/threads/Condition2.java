@@ -33,17 +33,19 @@ public class Condition2 {
      */
     public void sleep() {
 	Lib.assertTrue(conditionLock.isHeldByCurrentThread());
-
-	conditionLock.release();
 	
 	Machine.interrupt().disable(); 
+	conditionLock.release();
+	
+	
 	
 		waitQueue.add(KThread.currentThread());
 		KThread.sleep();
 	
-	Machine.interrupt().enable(); 
+	
 	
 	conditionLock.acquire();
+	Machine.interrupt().enable(); 
     }
 
     /**

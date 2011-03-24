@@ -35,10 +35,15 @@ public class Alarm {
 	    
 	for (int i = 0; i < waitList.size(); i++){
 		
+		//~ System.out.println(i);
+		
 		aux = waitList.get(i);
 		if(aux.wakeUpTime <= Machine.timer().getTime()){
 			aux.ready();
+			//~ System.out.println("THREAD ID: "+aux.toString());
 			waitList.remove(i);
+			i=-1;
+			//~ System.out.println("----->Lista : "+waitList.toString()+" size: "+waitList.size() + " i: "+i);
 		}
 		
 	}
