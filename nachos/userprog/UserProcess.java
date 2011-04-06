@@ -5,6 +5,7 @@ import nachos.threads.*;
 import nachos.userprog.*;
 
 import java.io.EOFException;
+import java.util.*;
 
 /**
  * Encapsulates the state of a user process that is not contained in its
@@ -345,7 +346,115 @@ public class UserProcess {
 	Lib.assertNotReached("Machine.halt() did not halt machine!");
 	return 0;
     }
+    
+    
+    
+    
+    
+    
+    
+    private int creat(int param) {
+	
+	int fileDescriptor =-1;
+	String name = readVirtualMemoryString(param,255); 
+      
+	if (name == null){
+            return fileDescriptor;
+	}
+        
+	OpenFile file = Machine.stubFileSystem().open(name, true);
+        
+	
+	if(file != null){
+            this.fileTable.put(this.nextFileDescriptor, file);
+	    fileDescriptor = this.nextFileDescriptor;
+            this.nextFileDescriptor++;
+	}
+	return fileDescriptor;	
+    }
+    
+     private int open(int fileName) {
+       int fileDescriptor =-1;
+	String name = readVirtualMemoryString(fileName,255); 
+      
+	if (name == null){
+            return fileDescriptor;
+	}
+        
+	OpenFile file = Machine.stubFileSystem().open(name, false);
+        
+	
+	if(file != null){
+	    fileDescriptor = this.nextFileDescriptor;
+	}
+	return fileDescriptor;
+    }
+    
+    private int close(int file){
 
+        Integer fileToClose = (Integer)(file);
+
+        OpenFile fileClosing = fileTable.get(fileToClose);
+        
+	if(fileClosing == null){
+            return -1;
+        } else {
+            fileClosing.close();
+            fileTable.remove(fileToClose);
+        }
+        return 0;
+    }
+    
+    public int write(int fileID, int buffer, int size){
+	   
+	    OpenFile file = fileTable.get(fileID);
+	    int result = -1;
+	    if(size <= 0){
+		    return result;
+	    }
+	    else if(file != null){
+		 
+		 byte[] data  = new byte[size];
+		 int bytesRead = readVirtualMemory(buffer, data);
+		
+		 result = file.write(data,0,bytesRead);  
+	 
+	 }
+		 return result;
+	 }
+
+	 
+   public int read(int fileID, int buffer, int size){
+	   OpenFile fileRead = fileTable.get(fileID);
+	   int result = -1;
+	   byte[] data = new byte[size];
+	   if( fileRead != null){
+		   
+		   result = fileRead.read(data, 0 , data.length);
+	   }
+	   if( result != -1){
+		   result = writeVirtualMemory(buffer, data);
+	   }
+	   return result;
+   }
+
+  private int unlink(int fileID){
+	  String str = readVirtualMemoryString(fileID,255);
+          int result;
+		if(Machine.stubFileSystem().remove(str)){
+			result = 0;
+		}else{
+			result = -1;
+		}
+		return result;
+	}
+    
+    
+    
+    
+    
+    
+    
 
     private static final int
         syscallHalt = 0,
@@ -446,4 +555,10 @@ public class UserProcess {
 	
     private static final int pageSize = Processor.pageSize;
     private static final char dbgProcess = 'a';
+    
+    
+    private Hashtable<Integer, OpenFile> fileTable = new Hashtable<Integer, OpenFile>();
+    private int nextFileDescriptor = 2;
+    
+    
 }
