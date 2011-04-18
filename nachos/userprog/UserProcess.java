@@ -372,8 +372,19 @@ public class UserProcess {
 	}
 	return fileDescriptor;	
     }
+    private int unlink(int fileID){
+	  String str = readVirtualMemoryString(fileID,255);
+          int result;
+		if(Machine.stubFileSystem().remove(str)){
+			result = 0;
+		}else{
+			result = -1;
+		}
+		return result;
+	}
+     
     
-     private int open(int fileName) {
+    private int open(int fileName) {
        int fileDescriptor =-1;
 	String name = readVirtualMemoryString(fileName,255); 
       
@@ -390,22 +401,25 @@ public class UserProcess {
 	return fileDescriptor;
     }
     
-    private int close(int file){
-
-        Integer fileToClose = (Integer)(file);
-
-        OpenFile fileClosing = fileTable.get(fileToClose);
-        
-	if(fileClosing == null){
-            return -1;
-        } else {
-            fileClosing.close();
-            fileTable.remove(fileToClose);
-        }
-        return 0;
-    }
     
-    public int write(int fileID, int buffer, int size){
+    
+    
+	 
+   public int read(int fileID, int buffer, int size){
+	   OpenFile fileRead = fileTable.get(fileID);
+	   int result = -1;
+	   byte[] data = new byte[size];
+	   if( fileRead != null){
+		   
+		   result = fileRead.read(data, 0 , data.length);
+	   }
+	   if( result != -1){
+		   result = writeVirtualMemory(buffer, data);
+	   }
+	   return result;
+   }
+
+   public int write(int fileID, int buffer, int size){
 	   
 	    OpenFile file = fileTable.get(fileID);
 	    int result = -1;
@@ -423,33 +437,22 @@ public class UserProcess {
 		 return result;
 	 }
 
-	 
-   public int read(int fileID, int buffer, int size){
-	   OpenFile fileRead = fileTable.get(fileID);
-	   int result = -1;
-	   byte[] data = new byte[size];
-	   if( fileRead != null){
-		   
-		   result = fileRead.read(data, 0 , data.length);
-	   }
-	   if( result != -1){
-		   result = writeVirtualMemory(buffer, data);
-	   }
-	   return result;
-   }
+  
+    
+    private int close(int file){
 
-  private int unlink(int fileID){
-	  String str = readVirtualMemoryString(fileID,255);
-          int result;
-		if(Machine.stubFileSystem().remove(str)){
-			result = 0;
-		}else{
-			result = -1;
-		}
-		return result;
-	}
-    
-    
+        Integer fileToClose = (Integer)(file);
+
+        OpenFile fileClosing = fileTable.get(fileToClose);
+        
+	if(fileClosing == null){
+            return -1;
+        } else {
+            fileClosing.close();
+            fileTable.remove(fileToClose);
+        }
+        return 0;
+    }
     
     
     
@@ -500,8 +503,15 @@ public class UserProcess {
 	switch (syscall) {
 	case syscallHalt:
 	    return handleHalt();
-
-
+	
+	case  syscallCreate:
+		return creat(a0);
+	
+	case syscallOpen:
+		return open(a0);
+	
+	case syscallWrite:
+		return write(a0,a1,a2);
 	default:
 	    Lib.debug(dbgProcess, "Unknown syscall " + syscall);
 	    Lib.assertNotReached("Unknown system call!");
