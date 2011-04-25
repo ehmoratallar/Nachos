@@ -54,6 +54,7 @@ public class UserProcess {
 	    return false;
 	
 	new UThread(this).setName(name).fork();
+	//~ fileTable.put(processThread.getId(),this);
 
 	return true;
     }
@@ -372,72 +373,27 @@ public class UserProcess {
 	}
 	return fileDescriptor;	
     }
-    private int unlink(int fileID){
-	  String str = readVirtualMemoryString(fileID,255);
-          int result;
-		if(Machine.stubFileSystem().remove(str)){
-			result = 0;
-		}else{
-			result = -1;
-		}
-		return result;
-	}
-     
     
-    private int open(int fileName) {
-       int fileDescriptor =-1;
+     private int open(int fileName) {
+	System.out.println("open");
+        int fileDescriptor =-1;
 	String name = readVirtualMemoryString(fileName,255); 
-      
-	if (name == null){
+        if (name == null){
             return fileDescriptor;
 	}
         
 	OpenFile file = Machine.stubFileSystem().open(name, false);
         
-	
 	if(file != null){
-	    fileDescriptor = this.nextFileDescriptor;
+	    if(fileTable.size()<=15 && fileTable.containsValue(file)){
+		fileDescriptor = this.nextFileDescriptor;
+		this.fileTable.put(this.nextFileDescriptor, file);
+	    }else{
+		return -1;
+	    }
 	}
 	return fileDescriptor;
     }
-    
-    
-    
-    
-	 
-   public int read(int fileID, int buffer, int size){
-	   OpenFile fileRead = fileTable.get(fileID);
-	   int result = -1;
-	   byte[] data = new byte[size];
-	   if( fileRead != null){
-		   
-		   result = fileRead.read(data, 0 , data.length);
-	   }
-	   if( result != -1){
-		   result = writeVirtualMemory(buffer, data);
-	   }
-	   return result;
-   }
-
-   public int write(int fileID, int buffer, int size){
-	   
-	    OpenFile file = fileTable.get(fileID);
-	    int result = -1;
-	    if(size <= 0){
-		    return result;
-	    }
-	    else if(file != null){
-		 
-		 byte[] data  = new byte[size];
-		 int bytesRead = readVirtualMemory(buffer, data);
-		
-		 result = file.write(data,0,bytesRead);  
-	 
-	 }
-		 return result;
-	 }
-
-  
     
     private int close(int file){
 
@@ -453,6 +409,103 @@ public class UserProcess {
         }
         return 0;
     }
+    
+    public int write(int fileID, int buffer, int size){
+	   System.out.println("==> WRITE DEBUG --> FileID: "+fileID+" buffer: "+buffer+ " size: "+size);
+	    System.out.println(fileTable);
+	    OpenFile file = fileTable.get(fileID);
+	    
+	    System.out.println(file);
+	    
+	    int result = -1;
+	    if(size <= 0){
+		    return result;
+	    }
+	    else if(file != null){
+		 
+		 byte[] data  = new byte[size];
+		 int bytesRead = readVirtualMemory(buffer, data);
+		
+		 result = file.write(data,0,bytesRead);  
+	 
+	 }
+		 return result;
+	 }
+
+	 
+   public int read(int fileID, int buffer, int size){
+	   OpenFile fileRead = fileTable.get(fileID);
+	   int result = -1;
+	   int devolver=-1;
+	   byte[] data = new byte[size];
+	   if( fileRead != null){
+		   
+		   result = fileRead.read(data, 0 , data.length);
+	   }
+	   if( result != -1){
+		   devolver = writeVirtualMemory(buffer, data,0,result);
+	   }
+	   return devolver;
+   }
+
+  private int unlink(int fileID){
+	  String str = readVirtualMemoryString(fileID,255);
+          int result;
+		if(Machine.stubFileSystem().remove(str)){
+			result = 0;
+		}else{
+			result = -1;
+		}
+		return result;
+	}
+
+/* private int exec(int name, int argc, int argv){
+	String nm= readVirtualMemoryString(name,255);
+	if(nm=!null){
+		int status = 1;
+		byte argptrs[] = new byte[0];
+		if(argc != 0){
+			argptrs = new byte[argc];
+			status = readVirtualMemory(argv, argptrs);
+		}
+		
+		if(!(status ==-1 || status ==0)){
+			String args[] = new String[argc];
+			for(int i=0; i<argptrs.length; i++){
+				args[i] = readVirtualMemoryString(argptrs[i],255);
+			}
+			UserProcess process = newUseProcess();
+			if(process.execute(name,args)){
+				return process.processThread.getId();
+			}
+		}
+	}
+	
+	return -1;
+}
+	
+	
+ private int exit(int status){
+	 fileTable.remove(processThread.getId());
+	 for(into i=0; i < pageTable.length; i++){
+		UserKernel.freePage(pageTable[i].ppn);
+	 }
+	 if(processTable.size() == 0){
+		 handleHalt();
+	}
+	 processThread.finish();
+	 return -1;
+ }	 
+ 
+ private int join(int pid, int status){
+	 UserProcess getP = (UserProcess) fileTable.get(pid);
+	 if(getP!=null){
+		 getP.processThread.join();
+		 return 0;
+	 }
+	 return -1;
+ } */
+
     
     
     
@@ -487,7 +540,7 @@ public class UserProcess {
      * <tr><td>6</td><td><tt>int  read(int fd, char *buffer, int size);
      *								</tt></td></tr>
      * <tr><td>7</td><td><tt>int  write(int fd, char *buffer, int size);
-     *								</tt></td></tr>
+     *			 					</tt></td></tr>
      * <tr><td>8</td><td><tt>int  close(int fd);</tt></td></tr>
      * <tr><td>9</td><td><tt>int  unlink(char *name);</tt></td></tr>
      * </table>
@@ -500,21 +553,33 @@ public class UserProcess {
      * @return	the value to be returned to the user.
      */
     public int handleSyscall(int syscall, int a0, int a1, int a2, int a3) {
+	System.out.println("Handle");
 	switch (syscall) {
-	case syscallHalt:
-	    return handleHalt();
-	
-	case  syscallCreate:
-		return creat(a0);
-	
-	case syscallOpen:
-		return open(a0);
-	
-	case syscallWrite:
-		return write(a0,a1,a2);
+		case syscallOpen:
+			System.out.println("open");
+			return open(a0);
+		case syscallHalt:
+		        return handleHalt();
+		case syscallCreate:
+			System.out.println("create");
+			return creat(a0);
+		case syscallRead:
+			System.out.println("read");
+			return read(a0,a1,a2);
+		case syscallWrite:
+			System.out.println("write");
+			return write(a0,a1,a2);
+		case syscallClose:
+			System.out.println("close");
+			return close(a0);
+		case syscallExit:
+			return handleHalt();
+			//~ System.out.println("UFF exit");
+		       //~ return exit(a0);
+
 	default:
 	    Lib.debug(dbgProcess, "Unknown syscall " + syscall);
-	    Lib.assertNotReached("Unknown system call!");
+	    Lib.assertNotReached("Unknown system call!" + syscall);
 	}
 	return 0;
     }
@@ -570,5 +635,5 @@ public class UserProcess {
     private Hashtable<Integer, OpenFile> fileTable = new Hashtable<Integer, OpenFile>();
     private int nextFileDescriptor = 2;
     
-    
+    private UThread processThread = null;
 }

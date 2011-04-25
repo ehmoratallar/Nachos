@@ -10,6 +10,9 @@ int main(int argc, char** argv)
 {
   int fd, amount;
 
+   printf("asfasdf");	
+   printf("asfasdf");	
+	
   if (argc!=2) {
     printf("Usage: cat <file>\n");
     return 1;
@@ -23,8 +26,10 @@ int main(int argc, char** argv)
 
   while ((amount = read(fd, buf, BUFSIZE))>0) {
     write(1, buf, amount);
+	  printf("Print ! \n%s",buf);
   }
-
+   
+  
   close(fd);
 
   return 0;
